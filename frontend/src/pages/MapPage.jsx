@@ -973,32 +973,7 @@ export default function MapPage() {
 
           <div className="flex flex-col gap-2">
             <LocationSearch label="From (source)" value={routeSrc} onChange={setRouteSrc} placeholder="Search start location…" />
-            <div>
-              <p className="text-[10px] text-gray-500 font-inter font-medium mb-1 flex items-center gap-1">
-                <Building2 size={10} /> To (destination hospital)
-              </p>
-              <select
-                value={routeDst ? `${routeDst.lat},${routeDst.lng}` : ''}
-                onChange={e => {
-                  if (!e.target.value) { setRouteDst(null); return; }
-                  const hosp = hospitals.find(h => `${parseFloat(h.latitude)},${parseFloat(h.longitude)}` === e.target.value);
-                  if (hosp) setRouteDst({ lat: parseFloat(hosp.latitude), lng: parseFloat(hosp.longitude), label: hosp.name });
-                }}
-                className="w-full text-[12px] font-inter bg-white border border-gray-200 rounded-lg px-2.5 py-1.5 text-gray-700 focus:outline-none focus:border-blue-400"
-              >
-                <option value="">— Select destination hospital —</option>
-                {hospitals.map(h => (
-                  <option key={h.id} value={`${parseFloat(h.latitude)},${parseFloat(h.longitude)}`}>
-                    🏥 {h.name}
-                  </option>
-                ))}
-              </select>
-              {routeDst && (
-                <p className="text-[10px] text-emerald-600 font-inter mt-0.5 truncate">
-                  📍 {routeDst.label}
-                </p>
-              )}
-            </div>
+            <LocationSearch label="To (destination)" value={routeDst} onChange={setRouteDst} placeholder="Search destination…" />
           </div>
 
           {statusInfo && (

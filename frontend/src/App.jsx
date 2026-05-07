@@ -2,13 +2,10 @@ import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { TripProvider, useTripContext } from './context/TripContext';
 import { AuthProvider, useAuth } from './context/AuthContext';
-import Dashboard    from './pages/Dashboard';
+import LandingPage  from './pages/LandingPage';
 import MapPage      from './pages/MapPage';
 import DriverPage   from './pages/DriverPage';
 import PolicePage   from './pages/PolicePage';
-import AdminDriver  from './pages/AdminDriver';
-import AdminPolice  from './pages/AdminPolice';
-import AdminStation from './pages/AdminStation';
 import LoginPage    from './pages/LoginPage';
 import RegisterPage from './pages/RegisterPage';
 import OTPPage      from './pages/OTPPage';
@@ -103,7 +100,7 @@ export default function App() {
           <TripNotificationBanner />
           <Routes>
             {/* Public routes */}
-            <Route path="/"              element={<Dashboard />} />
+            <Route path="/"              element={<LandingPage />} />
             <Route path="/map"           element={<MapPage />} />
             <Route path="/login"         element={<LoginPage />} />
             <Route path="/register"      element={<RegisterPage />} />
@@ -123,10 +120,6 @@ export default function App() {
               </ProtectedRoute>
             } />
 
-            {/* Admin routes (unprotected for prototype; add auth later if needed) */}
-            <Route path="/admin/driver"   element={<AdminDriver />} />
-            <Route path="/admin/police"   element={<AdminPolice />} />
-            <Route path="/admin/station"  element={<AdminStation />} />
             <Route path="*"              element={<Navigate to="/" replace />} />
           </Routes>
         </BrowserRouter>

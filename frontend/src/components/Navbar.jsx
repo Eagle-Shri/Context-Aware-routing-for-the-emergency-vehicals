@@ -1,20 +1,18 @@
 import React, { useState, useEffect } from 'react';
 import { Link, useLocation, useNavigate } from 'react-router-dom';
-import { Activity, Map, Truck, Shield, AlertTriangle, ChevronDown, LogOut } from 'lucide-react';
+import { LogOut } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 
 const NAV_LINKS = [
-  { label: 'Dashboard', to: '/' },
   { label: 'Live Map', to: '/map' },
-  { label: 'Driver', to: '/driver' },
-  { label: 'Police', to: '/police' },
+  { label: 'Driver Dashboard', to: '/driver' },
+  { label: 'Police Dashboard', to: '/police' },
 ];
 
 export default function Navbar() {
   const location = useLocation();
   const navigate = useNavigate();
   const { user, logout } = useAuth();
-  const [adminOpen, setAdminOpen] = useState(false);
   const [online, setOnline] = useState(true);
 
   function handleLogout() {
@@ -42,7 +40,7 @@ export default function Navbar() {
         </Link>
 
         {/* Nav links */}
-        <nav className="hidden md:flex items-center gap-1">
+        <nav className="hidden md:flex items-center gap-2">
           {NAV_LINKS.map(l => (
             <Link
               key={l.to}
@@ -56,48 +54,11 @@ export default function Navbar() {
               {l.label}
             </Link>
           ))}
-
-          {/* Admin dropdown */}
-          <div className="relative">
-            <button
-              onClick={() => setAdminOpen(v => !v)}
-              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-[13px] font-inter font-medium transition-colors ${
-                location.pathname.startsWith('/admin')
-                  ? 'bg-blue-50 text-blue-700'
-                  : 'text-gray-600 hover:bg-gray-50 hover:text-gray-900'
-              }`}
-            >
-              Admin
-              <ChevronDown size={13} className={`transition-transform ${adminOpen ? 'rotate-180' : ''}`} />
-            </button>
-            {adminOpen && (
-              <div
-                className="absolute top-full right-0 mt-1 bg-white border border-gray-100 rounded-xl shadow-lg shadow-gray-200/60 py-1.5 min-w-[160px] z-50"
-                onMouseLeave={() => setAdminOpen(false)}
-              >
-                {[
-                  { to: '/admin/driver',  label: 'Manage Drivers',  icon: <Truck size={13} /> },
-                  { to: '/admin/police',  label: 'Manage Police',   icon: <Shield size={13} /> },
-                  { to: '/admin/station', label: 'Manage Stations', icon: <Activity size={13} /> },
-                ].map(item => (
-                  <Link
-                    key={item.to}
-                    to={item.to}
-                    onClick={() => setAdminOpen(false)}
-                    className="flex items-center gap-2.5 px-3.5 py-2 text-[13px] font-inter text-gray-700 hover:bg-gray-50 transition-colors"
-                  >
-                    <span className="text-gray-400">{item.icon}</span>
-                    {item.label}
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
         </nav>
 
         {/* Status badge + User info */}
-        <div className="flex items-center gap-2">
-          <div className={`flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-inter font-medium ${
+        <div className="flex items-center gap-3">
+          <div className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1 rounded-full border text-[11px] font-inter font-medium ${
             online
               ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
               : 'bg-red-50 text-red-700 border-red-200'
@@ -107,7 +68,7 @@ export default function Navbar() {
           </div>
 
           {user ? (
-            <div className="flex items-center gap-2 ml-1">
+            <div className="flex items-center gap-3 pl-2 border-l border-gray-200">
               <div className="text-right hidden sm:block">
                 <p className="text-[12px] font-semibold text-gray-800 leading-none">{user.name}</p>
                 <p className="text-[10px] text-gray-400 capitalize">{user.role}</p>
@@ -115,16 +76,16 @@ export default function Navbar() {
               <button
                 onClick={handleLogout}
                 title="Logout"
-                className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-[12px] font-medium transition-colors"
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-red-50 hover:bg-red-100 text-red-600 text-[12px] font-medium transition-colors"
               >
-                <LogOut size={13} />
+                <LogOut size={14} />
                 <span className="hidden sm:block">Logout</span>
               </button>
             </div>
           ) : (
             <Link
               to="/login"
-              className="px-3 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[12px] font-semibold transition-colors ml-1"
+              className="px-4 py-1.5 rounded-lg bg-blue-600 hover:bg-blue-700 text-white text-[13px] font-semibold transition-colors ml-1"
             >
               Login
             </Link>

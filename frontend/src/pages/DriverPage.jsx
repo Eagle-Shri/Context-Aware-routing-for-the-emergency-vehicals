@@ -11,10 +11,11 @@ import { StatusBadge } from '../components/StatusBadge';
 import LocationSearch from '../components/LocationSearch';
 import {
   updateAmbulanceLocation, getAmbulances, getAmbulanceById,
-  updateAmbulanceStatus, clearAmbulanceDestination,
+  updateAmbulanceStatus, clearAmbulanceDestination, createAmbulance
 } from '../services/api';
 import { socketService } from '../services/socket';
 import { useTripContext } from '../context/TripContext';
+import { useAuth } from '../context/AuthContext';
 
 const STATUS_COLORS = {
   ACTIVE: 'bg-emerald-100 text-emerald-700 border-emerald-200',
@@ -46,6 +47,7 @@ function TripCard({ icon, label, value, sub, bg, border }) {
 export default function DriverPage() {
   const navigate = useNavigate();
   const tripCtx = useTripContext();
+  const { user } = useAuth();
 
   // Ambulance ID input
   const [ambId, setAmbId] = useState('');
@@ -94,7 +96,16 @@ export default function DriverPage() {
   async function fetchFleet() {
     try {
       const res = await getAmbulances();
-      setAmbulances(res.data || []);
+      const list = res.data || [];
+      setAmbulances(list);
+      
+      // Auto-assign the ambulance for the logged-in driver if not already set
+      if (user && user.name) {
+        const myAmb = list.find(a => a.driver_name === user.name);
+        if (myAmb && !ambId) {
+          setAmbId(String(myAmb.id));
+        }
+      }
     } catch {
       setAmbulances([]);
     } finally {
@@ -149,14 +160,30 @@ export default function DriverPage() {
     setSubmitStatus('loading');
     setMsg('');
     try {
-      if (!ambId) throw new Error('Please enter your Ambulance ID.');
       if (!location) throw new Error('Please select a location from search results.');
-      await updateAmbulanceLocation(ambId, location.lat, location.lng);
+      
+      let currentAmbId = ambId;
+      
+      // If the driver doesn't have an ambulance assigned yet, create one automatically
+      if (!currentAmbId) {
+        if (!user || !user.name) throw new Error('User not identified. Please login again.');
+        const res = await createAmbulance({ driver_name: user.name, latitude: location.lat, longitude: location.lng });
+        if (res.success && res.data) {
+          currentAmbId = String(res.data.id);
+          setAmbId(currentAmbId);
+          setMsg('Ambulance registered and location updated.');
+        } else {
+          throw new Error('Failed to create ambulance record.');
+        }
+      } else {
+        await updateAmbulanceLocation(currentAmbId, location.lat, location.lng);
+        setMsg('Location updated successfully.');
+      }
+      
       setSubmitStatus('success');
-      setMsg('Location updated successfully.');
       setLocation(null);
       fetchFleet();
-      if (ambData) fetchAmbulance(ambData.id);
+      if (ambData || currentAmbId) fetchAmbulance(currentAmbId);
     } catch (err) {
       setSubmitStatus('error');
       setMsg(err instanceof Error ? err.message : 'Failed to update location.');
@@ -299,14 +326,13 @@ export default function DriverPage() {
             <h2 className="font-poppins font-semibold text-gray-900 text-base mb-1">Update Location</h2>
             <p className="text-gray-400 font-inter text-sm mb-4">Report your current position to dispatch</p>
             <form onSubmit={handleLocationUpdate} className="flex flex-col gap-3 flex-1">
-              <FormField
-                label="Ambulance ID"
-                type="number"
-                value={ambId}
-                onChange={setAmbId}
-                placeholder="e.g. 1"
-                required
-              />
+              {ambId && (
+                <div className="flex items-center gap-2 px-3 py-2 bg-emerald-50 text-emerald-700 rounded-lg border border-emerald-200">
+                  <Truck size={16} />
+                  <span className="text-[13px] font-semibold font-inter">Assigned to Unit #{ambId}</span>
+                </div>
+              )}
+
               <LocationSearch
                 label="Current Location"
                 value={location}
