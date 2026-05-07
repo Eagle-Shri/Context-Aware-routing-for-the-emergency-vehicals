@@ -116,30 +116,46 @@ async function initDatabase() {
       CREATE TABLE IF NOT EXISTS police_officers (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        email VARCHAR(255),
+        email VARCHAR(255) UNIQUE,
         badge_number VARCHAR(50) NOT NULL UNIQUE,
         zone VARCHAR(100),
         password_hash VARCHAR(255),
         status VARCHAR(50) DEFAULT 'on_duty' CHECK (status IN ('on_duty', 'off_duty')),
+        is_verified BOOLEAN DEFAULT FALSE,
+        otp VARCHAR(6),
+        otp_expires TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    // Auth columns for existing deployments
+    await pool.query(`ALTER TABLE police_officers ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE`);
+    await pool.query(`ALTER TABLE police_officers ADD COLUMN IF NOT EXISTS otp VARCHAR(6)`);
+    await pool.query(`ALTER TABLE police_officers ADD COLUMN IF NOT EXISTS otp_expires TIMESTAMP`);
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS drivers (
         id SERIAL PRIMARY KEY,
         name VARCHAR(255) NOT NULL,
-        email VARCHAR(255),
+        email VARCHAR(255) UNIQUE,
         phone VARCHAR(20),
         ambulance_id INT REFERENCES ambulances(id) ON DELETE SET NULL,
         password_hash VARCHAR(255),
         status VARCHAR(50) DEFAULT 'IDLE' CHECK (status IN ('IDLE', 'ACTIVE', 'BUSY')),
         license_number VARCHAR(50),
+        vehicle_plate VARCHAR(50),
+        is_verified BOOLEAN DEFAULT FALSE,
+        otp VARCHAR(6),
+        otp_expires TIMESTAMP,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    // Auth columns for existing deployments
+    await pool.query(`ALTER TABLE drivers ADD COLUMN IF NOT EXISTS vehicle_plate VARCHAR(50)`);
+    await pool.query(`ALTER TABLE drivers ADD COLUMN IF NOT EXISTS is_verified BOOLEAN DEFAULT FALSE`);
+    await pool.query(`ALTER TABLE drivers ADD COLUMN IF NOT EXISTS otp VARCHAR(6)`);
+    await pool.query(`ALTER TABLE drivers ADD COLUMN IF NOT EXISTS otp_expires TIMESTAMP`);
 
     await pool.query(`
       CREATE TABLE IF NOT EXISTS activity_logs (

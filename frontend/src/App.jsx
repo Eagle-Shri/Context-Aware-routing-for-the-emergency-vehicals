@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { TripProvider, useTripContext } from './context/TripContext';
+import { AuthProvider, useAuth } from './context/AuthContext';
 import Dashboard    from './pages/Dashboard';
 import MapPage      from './pages/MapPage';
 import DriverPage   from './pages/DriverPage';
@@ -8,6 +9,36 @@ import PolicePage   from './pages/PolicePage';
 import AdminDriver  from './pages/AdminDriver';
 import AdminPolice  from './pages/AdminPolice';
 import AdminStation from './pages/AdminStation';
+import LoginPage    from './pages/LoginPage';
+import RegisterPage from './pages/RegisterPage';
+import OTPPage      from './pages/OTPPage';
+
+/**
+ * ProtectedRoute: Redirects to /login if the user is not authenticated.
+ * Optionally enforces a specific role.
+ */
+function ProtectedRoute({ children, requiredRole }) {
+  const { user, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-slate-900 flex items-center justify-center">
+        <div className="text-white text-lg animate-pulse">🚑 Loading...</div>
+      </div>
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/login" replace />;
+  }
+
+  if (requiredRole && user.role !== requiredRole) {
+    // Redirect wrong-role users back to login with a hint
+    return <Navigate to="/login" replace />;
+  }
+
+  return children;
+}
 
 function TripNotificationBanner() {
   const { trip, notification, dismissNotification } = useTripContext();
@@ -66,20 +97,40 @@ function TripNotificationBanner() {
 
 export default function App() {
   return (
-    <TripProvider>
-      <BrowserRouter>
-        <TripNotificationBanner />
-        <Routes>
-          <Route path="/"                element={<Dashboard />} />
-          <Route path="/map"             element={<MapPage />} />
-          <Route path="/driver"          element={<DriverPage />} />
-          <Route path="/police"          element={<PolicePage />} />
-          <Route path="/admin/driver"    element={<AdminDriver />} />
-          <Route path="/admin/police"    element={<AdminPolice />} />
-          <Route path="/admin/station"   element={<AdminStation />} />
-          <Route path="*"               element={<Navigate to="/" replace />} />
-        </Routes>
-      </BrowserRouter>
-    </TripProvider>
+    <AuthProvider>
+      <TripProvider>
+        <BrowserRouter>
+          <TripNotificationBanner />
+          <Routes>
+            {/* Public routes */}
+            <Route path="/"              element={<Dashboard />} />
+            <Route path="/map"           element={<MapPage />} />
+            <Route path="/login"         element={<LoginPage />} />
+            <Route path="/register"      element={<RegisterPage />} />
+            <Route path="/verify-otp"    element={<OTPPage />} />
+
+            {/* Protected: Driver only */}
+            <Route path="/driver" element={
+              <ProtectedRoute requiredRole="driver">
+                <DriverPage />
+              </ProtectedRoute>
+            } />
+
+            {/* Protected: Police only */}
+            <Route path="/police" element={
+              <ProtectedRoute requiredRole="police">
+                <PolicePage />
+              </ProtectedRoute>
+            } />
+
+            {/* Admin routes (unprotected for prototype; add auth later if needed) */}
+            <Route path="/admin/driver"   element={<AdminDriver />} />
+            <Route path="/admin/police"   element={<AdminPolice />} />
+            <Route path="/admin/station"  element={<AdminStation />} />
+            <Route path="*"              element={<Navigate to="/" replace />} />
+          </Routes>
+        </BrowserRouter>
+      </TripProvider>
+    </AuthProvider>
   );
 }

@@ -16,6 +16,7 @@ const stationRoutes = require('./routes/stationRoutes');
 const officerRoutes = require('./routes/officerRoutes');
 const driverRoutes = require('./routes/driverRoutes');
 const activityLogRoutes = require('./routes/activityLogRoutes');
+const authRoutes = require('./routes/authRoutes');
 
 const app = express();
 const server = http.createServer(app);
@@ -53,6 +54,7 @@ app.use('/api/stations', stationRoutes);
 app.use('/api/officers', officerRoutes);
 app.use('/api/drivers', driverRoutes);
 app.use('/api/activity-logs', activityLogRoutes);
+app.use('/api/auth', authRoutes);
 
 // Health check
 app.get('/health', (req, res) => {
